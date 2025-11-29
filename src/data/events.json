@@ -1,0 +1,206 @@
+[
+  {
+    "id": "evt-001",
+    "title": "Summer Music Festival 2024",
+    "artist": "Various Artists",
+    "location": "Jakarta International Stadium",
+    "date": "2024-06-15",
+    "time": "18:00",
+    "image": "/images/event-1.jpg",
+    "description": "The biggest summer music festival featuring international and local artists. Experience unforgettable performances across multiple stages.",
+    "category": "Festival",
+    "ticketCategories": [
+      {
+        "id": "cat-001-vip",
+        "name": "VIP",
+        "price": 2500000,
+        "stock": 50,
+        "benefits": ["Front row access", "Meet & Greet", "Exclusive merchandise", "VIP lounge"]
+      },
+      {
+        "id": "cat-001-festival",
+        "name": "Festival",
+        "price": 1000000,
+        "stock": 200,
+        "benefits": ["General admission", "Access to all stages", "Festival wristband"]
+      },
+      {
+        "id": "cat-001-tribune",
+        "name": "Tribune",
+        "price": 500000,
+        "stock": 500,
+        "benefits": ["Seated area", "Good view", "Standard facilities"]
+      }
+    ]
+  },
+  {
+    "id": "evt-002",
+    "title": "Rock Revolution Concert",
+    "artist": "The Rockstars",
+    "location": "Gelora Bung Karno Stadium",
+    "date": "2024-07-20",
+    "time": "19:00",
+    "image": "/images/event-2.jpg",
+    "description": "Experience the ultimate rock concert with legendary bands and explosive performances that will blow your mind!",
+    "category": "Concert",
+    "ticketCategories": [
+      {
+        "id": "cat-002-vip",
+        "name": "VIP",
+        "price": 3000000,
+        "stock": 30,
+        "benefits": ["Backstage access", "Photo opportunity", "Premium seating", "Exclusive merch"]
+      },
+      {
+        "id": "cat-002-festival",
+        "name": "Festival",
+        "price": 1200000,
+        "stock": 150,
+        "benefits": ["Standing area", "Close to stage", "Concert merchandise"]
+      },
+      {
+        "id": "cat-002-tribune",
+        "name": "Tribune",
+        "price": 600000,
+        "stock": 400,
+        "benefits": ["Comfortable seating", "Stadium view", "Food court access"]
+      }
+    ]
+  },
+  {
+    "id": "evt-003",
+    "title": "Electronic Dance Night",
+    "artist": "DJ Cosmic",
+    "location": "Beach Club Bali",
+    "date": "2024-08-10",
+    "time": "20:00",
+    "image": "/images/event-3.jpg",
+    "description": "Dance under the stars with world-class DJs spinning the hottest electronic beats. Beach party vibes guaranteed!",
+    "category": "Electronic",
+    "ticketCategories": [
+      {
+        "id": "cat-003-vip",
+        "name": "VIP",
+        "price": 1800000,
+        "stock": 40,
+        "benefits": ["Beach cabana", "Bottle service", "Priority entry", "VIP parking"]
+      },
+      {
+        "id": "cat-003-festival",
+        "name": "Festival",
+        "price": 800000,
+        "stock": 250,
+        "benefits": ["Dance floor access", "Welcome drink", "Beach access"]
+      },
+      {
+        "id": "cat-003-tribune",
+        "name": "Tribune",
+        "price": 400000,
+        "stock": 300,
+        "benefits": ["General admission", "Lounge area", "Standard bar"]
+      }
+    ]
+  },
+  {
+    "id": "evt-004",
+    "title": "Jazz Under The Moon",
+    "artist": "Smooth Jazz Ensemble",
+    "location": "Ancol Beach City",
+    "date": "2024-09-05",
+    "time": "19:30",
+    "image": "/images/event-4.jpg",
+    "description": "An elegant evening of smooth jazz performances with stunning ocean views. Perfect for jazz lovers and romantic evenings.",
+    "category": "Jazz",
+    "ticketCategories": [
+      {
+        "id": "cat-004-vip",
+        "name": "VIP",
+        "price": 1500000,
+        "stock": 60,
+        "benefits": ["Premium table", "Dinner included", "Wine selection", "Artist meet"]
+      },
+      {
+        "id": "cat-004-festival",
+        "name": "Festival",
+        "price": 700000,
+        "stock": 180,
+        "benefits": ["Standard seating", "Light refreshments", "Good acoustics"]
+      },
+      {
+        "id": "cat-004-tribune",
+        "name": "Tribune",
+        "price": 350000,
+        "stock": 350,
+        "benefits": ["General seating", "Basic facilities", "Nice atmosphere"]
+      }
+    ]
+  },
+  {
+    "id": "evt-005",
+    "title": "Hip Hop Nation Tour",
+    "artist": "MC Flow & Friends",
+    "location": "Istora Senayan",
+    "date": "2024-10-12",
+    "time": "20:00",
+    "image": "/images/event-5.jpg",
+    "description": "The biggest hip hop concert of the year featuring top MCs, incredible beats, and street culture celebration!",
+    "category": "Hip Hop",
+    "ticketCategories": [
+      {
+        "id": "cat-005-vip",
+        "name": "VIP",
+        "price": 2200000,
+        "stock": 45,
+        "benefits": ["Pit access", "Exclusive merch", "After party", "Photo booth"]
+      },
+      {
+        "id": "cat-005-festival",
+        "name": "Festival",
+        "price": 950000,
+        "stock": 220,
+        "benefits": ["Standing zone", "Concert tee", "Early entry"]
+      },
+      {
+        "id": "cat-005-tribune",
+        "name": "Tribune",
+        "price": 480000,
+        "stock": 450,
+        "benefits": ["Seated comfort", "Clear view", "Concession access"]
+      }
+    ]
+  },
+  {
+    "id": "evt-006",
+    "title": "Indie Fest Indonesia",
+    "artist": "Local Indie Bands",
+    "location": "Taman Budaya Yogyakarta",
+    "date": "2024-11-18",
+    "time": "17:00",
+    "image": "/images/event-6.jpg",
+    "description": "Celebrate Indonesian indie music culture with amazing local talent, art installations, and creative community vibes.",
+    "category": "Indie",
+    "ticketCategories": [
+      {
+        "id": "cat-006-vip",
+        "name": "VIP",
+        "price": 1200000,
+        "stock": 55,
+        "benefits": ["Front stage", "Artist signing", "Limited tote bag", "Fast track"]
+      },
+      {
+        "id": "cat-006-festival",
+        "name": "Festival",
+        "price": 600000,
+        "stock": 300,
+        "benefits": ["Full access", "Festival pass", "Merchandise"]
+      },
+      {
+        "id": "cat-006-tribune",
+        "name": "Tribune",
+        "price": 300000,
+        "stock": 600,
+        "benefits": ["Lawn seating", "Relaxed vibe", "Food trucks"]
+      }
+    ]
+  }
+]
