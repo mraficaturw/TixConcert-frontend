@@ -16,7 +16,7 @@ export const EventCard = ({ event }: EventCardProps) => {
   return (
     <Card className="overflow-hidden group hover:shadow-glow transition-all duration-300 border-border/50 bg-card/50 backdrop-blur">
       <Link to={`/events/${event.id}`}>
-        <div className="relative h-48 overflow-hidden bg-muted">
+        <div className="relative h-14 overflow-hidden bg-muted">
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent z-10" />
           <div className="w-full h-full bg-concert-gradient opacity-50" />
           <Badge className="absolute top-3 right-3 z-20 bg-primary/90 backdrop-blur">
@@ -27,6 +27,7 @@ export const EventCard = ({ event }: EventCardProps) => {
 
       <CardContent className="p-4 space-y-3">
         <Link to={`/events/${event.id}`}>
+        <img src={event.image} alt={event.title} className="px-4 py-4" />
           <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">
             {event.title}
           </h3>
