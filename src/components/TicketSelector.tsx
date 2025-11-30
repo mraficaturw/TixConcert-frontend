@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { formatCurrency } from '@/utils/formatters';
 import { TicketCategory } from '@/utils/api';
+import { Event } from '@/utils/api';
 
 interface TicketSelectorProps {
   category: TicketCategory;

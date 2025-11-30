@@ -137,8 +137,9 @@ export default function EventDetail() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Event Image & Info */}
           <div className="space-y-6 animate-fade-in">
-            <div className="relative h-[400px] rounded-2xl overflow-hidden shadow-card">
-              <div className="w-full h-full bg-concert-gradient" />
+            <div className="relative h-fit rounded-2xl overflow-hidden shadow-card">
+              <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-concert-gradient opacity-50" />
               <Badge className="absolute top-4 right-4 bg-primary/90 backdrop-blur">
                 {event.category}
               </Badge>

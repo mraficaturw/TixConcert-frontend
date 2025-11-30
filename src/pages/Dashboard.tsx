@@ -83,7 +83,7 @@ export default function Dashboard() {
             <CardHeader>
               <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-6">
               <Link to="/events">
                 <Button variant="outline" className="w-full justify-start">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -91,7 +91,7 @@ export default function Dashboard() {
                 </Button>
               </Link>
               <Link to="/dashboard/orders">
-                <Button variant="outline" className="w-full justify-start">
+                <Button variant="outline" className="w-full justify-start mt-6 mb-6">
                   <Ticket className="w-4 h-4 mr-2" />
                   My Orders
                 </Button>
