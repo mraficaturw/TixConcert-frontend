@@ -27,7 +27,9 @@ export const EventCard = ({ event }: EventCardProps) => {
 
       <CardContent className="p-4 space-y-3">
         <Link to={`/events/${event.id}`}>
-        <img src={event.image} alt={event.title} className="px-4 py-4" />
+          <div className="aspect-video w-full overflow-hidden rounded-md mb-3">
+            <img src={event.image || 'https://via.placeholder.com/400x200'} alt={event.title} className="w-full h-full object-cover hover:scale-105 transition-transform duration-300" />
+          </div>
           <h3 className="font-bold text-lg line-clamp-1 group-hover:text-primary transition-colors">
             {event.title}
           </h3>

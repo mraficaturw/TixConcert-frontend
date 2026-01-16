@@ -8,15 +8,16 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useCartStore } from '@/stores/cartStore';
 import { useAuthStore } from '@/stores/authStore';
-import { useOrderStore } from '@/stores/orderStore';
 import { formatCurrency } from '@/utils/formatters';
 import { toast } from '@/hooks/use-toast';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
 export default function Checkout() {
   const navigate = useNavigate();
   const { items, getTotalPrice, clearCart } = useCartStore();
   const user = useAuthStore((state) => state.user);
-  const createOrder = useOrderStore((state) => state.createOrder);
+  const token = useAuthStore((state) => state.token);
 
   const [paymentMethod, setPaymentMethod] = useState('credit-card');
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,7 @@ export default function Checkout() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!user) {
+    if (!user || !token) {
       toast({
         title: 'Error',
         description: 'User not authenticated',
@@ -49,17 +50,115 @@ export default function Checkout() {
 
     setLoading(true);
 
-    // Simulate processing time
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    try {
+      // Call backend API untuk checkout dan mendapat snap token
+      const response = await fetch(`${API_URL}/api/checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          items: items.map(item => ({
+            ticket_category_id: Number(item.ticketCategoryId),
+            quantity: item.quantity,
+          })),
+        }),
+      });
 
-    // Create order
-    const order = createOrder(user.id, items, totalPrice, paymentMethod);
+      // Get response text first for debugging
+      const responseText = await response.text();
+      console.log('Checkout response:', responseText);
 
-    // Clear cart
-    clearCart();
+      if (!response.ok) {
+        let errorMessage = 'Failed to create transaction';
+        try {
+          const errorData = JSON.parse(responseText);
+          errorMessage = errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = responseText || errorMessage;
+        }
+        throw new Error(errorMessage);
+      }
 
-    // Navigate to payment page
-    navigate(`/payment/${order.id}`);
+      // Parse JSON response
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch (e) {
+        throw new Error('Invalid response from server');
+      }
+
+      console.log('Parsed data:', data);
+
+      // Buka Midtrans Snap popup
+      if (window.snap && data.snap_token) {
+        window.snap.pay(data.snap_token, {
+          onSuccess: async (result: any) => {
+            console.log('Payment success:', result);
+
+            // Update payment status in backend
+            try {
+              await fetch(`${API_URL}/api/update-payment-status`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                  transaction_id: data.ID,
+                  status: 'success',
+                }),
+              });
+            } catch (err) {
+              console.error('Failed to update payment status:', err);
+            }
+
+            clearCart();
+            toast({
+              title: 'Payment Successful!',
+              description: 'Your tickets have been purchased.',
+            });
+            navigate(`/payment-success/${data.ID}`);
+          },
+          onPending: (result: any) => {
+            console.log('Payment pending:', result);
+            clearCart();
+            toast({
+              title: 'Payment Pending',
+              description: 'Please complete your payment.',
+            });
+            navigate(`/orders`);
+          },
+          onError: (result: any) => {
+            console.error('Payment error:', result);
+            toast({
+              title: 'Payment Failed',
+              description: 'There was an error processing your payment.',
+              variant: 'destructive',
+            });
+          },
+          onClose: () => {
+            toast({
+              title: 'Payment Cancelled',
+              description: 'You closed the payment window.',
+            });
+          },
+        });
+      } else {
+        // Fallback jika snap tidak tersedia atau tidak ada snap_token
+        throw new Error('Payment gateway not available');
+      }
+    } catch (error: any) {
+      console.error('Checkout error:', error);
+      toast({
+        title: 'Checkout Failed',
+        description: error.message || 'Something went wrong',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (items.length === 0) {
@@ -109,11 +208,10 @@ export default function Checkout() {
                     <div className="space-y-3">
                       <label
                         htmlFor="credit-card"
-                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          paymentMethod === 'credit-card'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'credit-card'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                          }`}
                       >
                         <RadioGroupItem value="credit-card" id="credit-card" />
                         <CreditCard className="w-5 h-5 text-primary" />
@@ -125,11 +223,10 @@ export default function Checkout() {
 
                       <label
                         htmlFor="e-wallet"
-                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          paymentMethod === 'e-wallet'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'e-wallet'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                          }`}
                       >
                         <RadioGroupItem value="e-wallet" id="e-wallet" />
                         <Wallet className="w-5 h-5 text-primary" />
@@ -141,11 +238,10 @@ export default function Checkout() {
 
                       <label
                         htmlFor="bank-transfer"
-                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${
-                          paymentMethod === 'bank-transfer'
-                            ? 'border-primary bg-primary/5'
-                            : 'border-border hover:border-primary/50'
-                        }`}
+                        className={`flex items-center space-x-3 p-4 rounded-lg border-2 cursor-pointer transition-all ${paymentMethod === 'bank-transfer'
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50'
+                          }`}
                       >
                         <RadioGroupItem value="bank-transfer" id="bank-transfer" />
                         <Building2 className="w-5 h-5 text-primary" />

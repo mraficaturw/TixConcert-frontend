@@ -77,9 +77,16 @@ export const Navbar = () => {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard" className="cursor-pointer">
-                      Dashboard
+                      User Dashboard
                     </Link>
                   </DropdownMenuItem>
+                  {user.role === 'EO' && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/eo/dashboard" className="cursor-pointer">
+                        EO Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem asChild>
                     <Link to="/dashboard/profile" className="cursor-pointer">
                       Profile

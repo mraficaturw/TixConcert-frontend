@@ -1,22 +1,76 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { CheckCircle, Download, ArrowRight } from 'lucide-react';
+import { CheckCircle, Download, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { useOrderStore } from '@/stores/orderStore';
+import { useAuthStore } from '@/stores/authStore';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 import confetti from 'canvas-confetti';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+interface OrderItem {
+  ticket_category_id: number;
+  ticket_category_name: string;
+  quantity: number;
+  price: number;
+  event_id: number;
+  event_title: string;
+  event_date?: string;
+  event_location?: string;
+  event_image?: string;
+}
+
+interface Order {
+  id: number;
+  user_id: number;
+  total_amount: number;
+  status: string;
+  payment_url: string;
+  snap_token?: string;
+  created_at: string;
+  items: OrderItem[];
+}
 
 export default function PaymentSuccess() {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
-  const order = useOrderStore((state) => state.getOrderById(orderId || ''));
+  const token = useAuthStore((state) => state.token);
+
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!order) {
-      navigate('/');
-      return;
-    }
+    const fetchOrder = async () => {
+      if (!orderId || !token) {
+        navigate('/');
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_URL}/api/my-orders/${orderId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setOrder(data);
+        } else {
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Failed to fetch order:', error);
+        navigate('/');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrder();
+  }, [orderId, token, navigate]);
+
+  useEffect(() => {
+    if (!order || loading) return;
 
     // Trigger confetti animation
     const duration = 3000;
@@ -44,7 +98,15 @@ export default function PaymentSuccess() {
     };
 
     frame();
-  }, [order, navigate]);
+  }, [order, loading]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   if (!order) {
     return null;
@@ -78,18 +140,18 @@ export default function PaymentSuccess() {
               <div className="space-y-4">
                 <div className="flex justify-between items-center pb-4 border-b border-border">
                   <span className="text-sm text-muted-foreground">Order ID</span>
-                  <span className="font-mono font-bold">{order.id}</span>
+                  <span className="font-mono font-bold">TIX-{order.id}</span>
                 </div>
 
                 <div className="space-y-3">
-                  {order.items.map((item) => (
-                    <div key={`${item.eventId}-${item.ticketCategoryId}`} className="space-y-1">
+                  {order.items?.map((item, index) => (
+                    <div key={index} className="space-y-1">
                       <div className="flex justify-between">
-                        <span className="font-medium">{item.eventTitle}</span>
+                        <span className="font-medium">{item.event_title}</span>
                       </div>
                       <div className="flex justify-between text-sm text-muted-foreground">
                         <span>
-                          {item.ticketCategoryName} × {item.quantity}
+                          {item.ticket_category_name} × {item.quantity}
                         </span>
                         <span>{formatCurrency(item.price * item.quantity)}</span>
                       </div>
@@ -100,20 +162,20 @@ export default function PaymentSuccess() {
                 <div className="border-t border-border pt-4">
                   <div className="flex justify-between items-center text-xl">
                     <span className="font-bold">Total Paid</span>
-                    <span className="font-bold text-primary">{formatCurrency(order.totalAmount)}</span>
+                    <span className="font-bold text-primary">{formatCurrency(order.total_amount)}</span>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-2 pt-4 border-t border-border text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Payment Method</span>
-                  <span className="font-medium capitalize">{order.paymentMethod.replace('-', ' ')}</span>
+                  <span className="text-muted-foreground">Status</span>
+                  <span className="font-medium capitalize text-green-500">{order.status}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Payment Date</span>
                   <span className="font-medium">
-                    {order.paidAt ? formatDate(order.paidAt) : 'Just now'}
+                    {formatDate(order.created_at)}
                   </span>
                 </div>
               </div>

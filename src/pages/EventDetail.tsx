@@ -24,7 +24,7 @@ export default function EventDetail() {
       try {
         const data = await api.getEventById(id);
         setEvent(data);
-        
+
         // Initialize quantities
         if (data) {
           const initialQuantities: Record<string, number> = {};
@@ -138,7 +138,7 @@ export default function EventDetail() {
           {/* Event Image & Info */}
           <div className="space-y-6 animate-fade-in">
             <div className="relative h-fit rounded-2xl overflow-hidden shadow-card">
-              <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+              <img src={event.image || 'https://via.placeholder.com/800x400'} alt={event.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-concert-gradient opacity-50" />
               <Badge className="absolute top-4 right-4 bg-primary/90 backdrop-blur">
                 {event.category}

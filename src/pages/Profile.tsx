@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuthStore } from '@/stores/authStore';
 import { toast } from '@/hooks/use-toast';
+import ImageUpload from '@/components/ImageUpload';
 
 export default function Profile() {
   const { user, updateProfile } = useAuthStore();
@@ -13,6 +14,7 @@ export default function Profile() {
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
+    avatar: user?.avatar || '',
   });
   const [loading, setLoading] = useState(false);
 
@@ -51,16 +53,22 @@ export default function Profile() {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* Avatar */}
-              <div className="flex items-center gap-6">
-                <div className="w-24 h-24 rounded-full bg-concert-gradient flex items-center justify-center shadow-glow">
-                  <User className="w-12 h-12 text-white" />
+              {/* Avatar */}
+              <div className="flex items-start gap-6">
+                <div className="w-32">
+                  <ImageUpload
+                    currentImage={formData.avatar}
+                    onUpload={(url) => setFormData({ ...formData, avatar: url })}
+                    className="w-32 h-32 rounded-full overflow-hidden"
+                    label=""
+                  />
                 </div>
-                <div>
+                <div className="pt-2">
                   <p className="font-medium mb-1">{user?.name}</p>
                   <p className="text-sm text-muted-foreground mb-3">{user?.email}</p>
-                  <Button type="button" variant="outline" size="sm">
-                    Change Avatar
-                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Click image to upload new avatar.
+                  </p>
                 </div>
               </div>
 
@@ -132,6 +140,34 @@ export default function Profile() {
                 </Button>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* EO Section */}
+        <Card className="mt-8 border-2 border-border shadow-card animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <CardHeader>
+            <CardTitle>Event Organizer</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium mb-1">
+                  {user?.role === 'EO' ? 'Anda adalah Event Organizer' : 'Ingin membuat event sendiri?'}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {user?.role === 'EO'
+                    ? 'Kelola event dan tiket Anda melalui dashboard.'
+                    : 'Daftar sebagai Event Organizer untuk mulai menjual tiket konser Anda.'}
+                </p>
+              </div>
+              <Button asChild variant={user?.role === 'EO' ? 'default' : 'outline'}>
+                {user?.role === 'EO' ? (
+                  <a href="/eo/dashboard">Ke Dashboard EO</a>
+                ) : (
+                  <a href="/eo/register">Daftar EO</a>
+                )}
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

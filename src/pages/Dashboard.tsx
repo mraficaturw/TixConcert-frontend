@@ -1,25 +1,93 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, User, ShoppingBag, Calendar } from 'lucide-react';
+import { Ticket, User, ShoppingBag, Calendar, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuthStore } from '@/stores/authStore';
-import { useOrderStore } from '@/stores/orderStore';
-import { formatCurrency, formatShortDate } from '@/utils/formatters';
+import { formatCurrency } from '@/utils/formatters';
 import { Badge } from '@/components/ui/badge';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
+
+interface DashboardStats {
+  total_orders: number;
+  total_tickets: number;
+  total_spent: number;
+}
+
+interface OrderItem {
+  ticket_category_id: number;
+  ticket_category_name: string;
+  quantity: number;
+  price: number;
+  event_id: number;
+  event_title: string;
+}
+
+interface Order {
+  id: number;
+  user_id: number;
+  total_amount: number;
+  status: string;
+  payment_url: string;
+  created_at: string;
+  items: OrderItem[];
+}
 
 export default function Dashboard() {
   const user = useAuthStore((state) => state.user);
-  const orders = useOrderStore((state) => state.orders);
-  const userOrders = user ? orders.filter((order) => order.userId === user.id) : [];
+  const token = useAuthStore((state) => state.token);
 
-  const paidOrders = userOrders.filter((order) => order.status === 'paid');
-  const totalSpent = paidOrders.reduce((sum, order) => sum + order.totalAmount, 0);
-  const totalTickets = paidOrders.reduce(
-    (sum, order) => sum + order.items.reduce((itemSum, item) => itemSum + item.quantity, 0),
-    0
-  );
+  const [stats, setStats] = useState<DashboardStats>({ total_orders: 0, total_tickets: 0, total_spent: 0 });
+  const [recentOrders, setRecentOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const recentOrders = userOrders.slice(0, 3);
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch stats
+        const statsRes = await fetch(`${API_URL}/api/dashboard-stats`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (statsRes.ok) {
+          const statsData = await statsRes.json();
+          setStats(statsData);
+        }
+
+        // Fetch recent orders
+        const ordersRes = await fetch(`${API_URL}/api/my-orders`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (ordersRes.ok) {
+          const ordersData = await ordersRes.json();
+          setRecentOrders((ordersData || []).slice(0, 3));
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+
+    // Refetch when window gains focus (e.g., after returning from payment)
+    const handleFocus = () => {
+      fetchDashboardData();
+    };
+
+    window.addEventListener('focus', handleFocus);
+
+    // Also poll every 30 seconds for updates
+    const interval = setInterval(fetchDashboardData, 30000);
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(interval);
+    };
+  }, [token]);
 
   return (
     <div className="min-h-screen py-12">
@@ -39,7 +107,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Orders</p>
-                  <p className="text-3xl font-bold">{paidOrders.length}</p>
+                  <p className="text-3xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.total_orders}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                   <ShoppingBag className="w-6 h-6 text-primary" />
@@ -53,7 +121,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Tickets</p>
-                  <p className="text-3xl font-bold">{totalTickets}</p>
+                  <p className="text-3xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.total_tickets}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center">
                   <Ticket className="w-6 h-6 text-secondary" />
@@ -67,7 +135,7 @@ export default function Dashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Total Spent</p>
-                  <p className="text-2xl font-bold">{formatCurrency(totalSpent)}</p>
+                  <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : formatCurrency(stats.total_spent)}</p>
                 </div>
                 <div className="w-12 h-12 rounded-full bg-accent/10 flex items-center justify-center">
                   <Calendar className="w-6 h-6 text-accent" />
@@ -128,10 +196,10 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           <p className="font-medium text-sm line-clamp-1">
-                            {order.items[0]?.eventTitle}
+                            {order.items[0]?.event_title || 'Unknown Event'}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {order.items.reduce((sum, item) => sum + item.quantity, 0)} tickets
+                            {order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0} tickets
                           </p>
                         </div>
                         <Badge
@@ -139,9 +207,10 @@ export default function Dashboard() {
                             order.status === 'paid'
                               ? 'default'
                               : order.status === 'pending'
-                              ? 'secondary'
-                              : 'destructive'
+                                ? 'secondary'
+                                : 'destructive'
                           }
+                          className={order.status === 'expired' ? 'bg-amber-500 hover:bg-amber-600' : ''}
                         >
                           {order.status}
                         </Badge>

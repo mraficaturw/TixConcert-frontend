@@ -1,19 +1,66 @@
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Ticket, Calendar, MapPin, ChevronRight } from 'lucide-react';
+import { Ticket, Calendar, MapPin, ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuthStore } from '@/stores/authStore';
-import { useOrderStore } from '@/stores/orderStore';
 import { formatCurrency, formatShortDate } from '@/utils/formatters';
 
-export default function Orders() {
-  const user = useAuthStore((state) => state.user);
-  const orders = useOrderStore((state) => state.orders);
-  const userOrders = user ? orders.filter((order) => order.userId === user.id) : [];
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8081';
 
-  const sortedOrders = [...userOrders].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+interface OrderItem {
+  ticket_category_id: number;
+  ticket_category_name: string;
+  quantity: number;
+  price: number;
+  event_id: number;
+  event_title: string;
+}
+
+interface Order {
+  id: number;
+  user_id: number;
+  total_amount: number;
+  status: string;
+  payment_url: string;
+  created_at: string;
+  items: OrderItem[];
+}
+
+export default function Orders() {
+  const token = useAuthStore((state) => state.token);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchOrders = async () => {
+      try {
+        const response = await fetch(`${API_URL}/api/my-orders`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setOrders(data || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch orders:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrders();
+  }, [token]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen py-12 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-12">
@@ -25,9 +72,9 @@ export default function Orders() {
           <p className="text-muted-foreground">Semua pesanan dan tiket Anda</p>
         </div>
 
-        {sortedOrders.length > 0 ? (
+        {orders.length > 0 ? (
           <div className="space-y-4">
-            {sortedOrders.map((order, index) => (
+            {orders.map((order, index) => (
               <Link
                 key={order.id}
                 to={`/dashboard/orders/${order.id}`}
@@ -41,9 +88,9 @@ export default function Orders() {
                         {/* Order Header */}
                         <div className="flex items-center justify-between">
                           <div>
-                            <p className="font-mono text-sm text-muted-foreground">{order.id}</p>
+                            <p className="font-mono text-sm text-muted-foreground">TIX-{order.id}</p>
                             <p className="text-xs text-muted-foreground">
-                              {formatShortDate(order.createdAt)}
+                              {formatShortDate(order.created_at)}
                             </p>
                           </div>
                           <Badge
@@ -51,10 +98,10 @@ export default function Orders() {
                               order.status === 'paid'
                                 ? 'default'
                                 : order.status === 'pending'
-                                ? 'secondary'
-                                : 'destructive'
+                                  ? 'secondary'
+                                  : 'destructive'
                             }
-                            className="capitalize"
+                            className={`capitalize ${order.status === 'expired' ? 'bg-amber-500 hover:bg-amber-600' : ''}`}
                           >
                             {order.status}
                           </Badge>
@@ -62,22 +109,14 @@ export default function Orders() {
 
                         {/* Events */}
                         <div className="space-y-2">
-                          {order.items.map((item, idx) => (
+                          {order.items?.map((item, idx) => (
                             <div key={idx} className="space-y-1">
-                              <h3 className="font-bold">{item.eventTitle}</h3>
+                              <h3 className="font-bold">{item.event_title || 'Unknown Event'}</h3>
                               <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                                <div className="flex items-center gap-1">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatShortDate(item.eventDate)}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <MapPin className="w-3 h-3" />
-                                  <span className="line-clamp-1">{item.eventLocation}</span>
-                                </div>
                                 <div className="flex items-center gap-1">
                                   <Ticket className="w-3 h-3" />
                                   <span>
-                                    {item.ticketCategoryName} × {item.quantity}
+                                    {item.ticket_category_name} × {item.quantity}
                                   </span>
                                 </div>
                               </div>
@@ -89,7 +128,7 @@ export default function Orders() {
                         <div className="flex items-center justify-between pt-3 border-t border-border">
                           <span className="text-sm text-muted-foreground">Total Amount</span>
                           <span className="font-bold text-lg text-primary">
-                            {formatCurrency(order.totalAmount)}
+                            {formatCurrency(order.total_amount)}
                           </span>
                         </div>
                       </div>
@@ -123,3 +162,4 @@ export default function Orders() {
     </div>
   );
 }
+
