@@ -3,14 +3,12 @@ import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
-import { supabase } from '@/lib/supabase';
 
 interface ImageUploadProps {
     onUpload: (url: string) => void;
     currentImage?: string;
     label?: string;
     className?: string;
-    bucketName?: string; // default: 'images'
 }
 
 export default function ImageUpload({
@@ -18,7 +16,6 @@ export default function ImageUpload({
     currentImage,
     label = 'Upload Image',
     className = '',
-    bucketName = 'images',
 }: ImageUploadProps) {
     const [uploading, setUploading] = useState(false);
     const [preview, setPreview] = useState<string | null>(currentImage || null);
@@ -34,28 +31,19 @@ export default function ImageUpload({
                 throw new Error('File size must be less than 2MB');
             }
 
-            // Create preview
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
-
-            // Upload to Supabase
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from(bucketName)
-                .upload(filePath, file);
-
-            if (uploadError) {
-                throw uploadError;
-            }
-
-            // Get Public URL
-            const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
-
-            onUpload(data.publicUrl);
-            toast({ title: 'Image uploaded successfully' });
+            // Convert file to data URL for local preview/storage
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                setPreview(dataUrl);
+                onUpload(dataUrl);
+                toast({ title: 'Image uploaded successfully' });
+                setUploading(false);
+            };
+            reader.onerror = () => {
+                throw new Error('Failed to read file');
+            };
+            reader.readAsDataURL(file);
 
         } catch (error: any) {
             setPreview(currentImage || null); // Revert preview on error
@@ -64,7 +52,6 @@ export default function ImageUpload({
                 description: error.message,
                 variant: 'destructive',
             });
-        } finally {
             setUploading(false);
         }
     };
